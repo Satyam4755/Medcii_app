@@ -11,7 +11,7 @@
   "first_name",
   "last_name",
   "gender",
-  "dob",
+  "date_of_birth",
   "profile_photo",
   "contact_information_section",
   "phone_number",
@@ -51,11 +51,6 @@
    "label": "Gender",
    "options": "Male\nFemale\nPrefer not to say",
    "reqd": 1
-  },
-  {
-   "fieldname": "dob",
-   "fieldtype": "Date",
-   "label": "Date Of Birth"
   },
   {
    "fieldname": "profile_photo",
@@ -113,12 +108,17 @@
    "fieldtype": "Link",
    "label": "User",
    "options": "User"
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date Of Birth"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-04 15:57:39.472926",
+ "modified": "2026-07-04 19:33:05.466139",
  "modified_by": "Administrator",
  "module": "Medci",
  "name": "Patient",
