@@ -64,7 +64,7 @@
   },
   {
    "fieldname": "phone_number",
-   "fieldtype": "Phone",
+   "fieldtype": "Data",
    "label": "Phone Number"
   },
   {
@@ -118,7 +118,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-04 19:33:05.466139",
+ "modified": "2026-07-04 20:15:20.774208",
  "modified_by": "Administrator",
  "module": "Medci",
  "name": "Patient",

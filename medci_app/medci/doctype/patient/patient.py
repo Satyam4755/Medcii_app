@@ -1,4 +1,5 @@
 import frappe
+import re
 from frappe.model.document import Document
 from frappe.utils import getdate
 
@@ -58,29 +59,28 @@ class Patient(Document):
             frappe.throw("Email already exists.")
 
     def validate_phone(self):
-
         if not self.phone_number:
-            return
-
-        self.phone_number = self.phone_number.strip()
-
-        if not self.phone_number.isdigit():
-            frappe.throw("Phone Number must contain only digits.")
-
+             return
+        self.phone_number = re.sub(r"\D", "", self.phone_number)
+        if self.phone_number.startswith("91") and len(self.phone_number) == 12:
+             self.phone_number = self.phone_number[2:]
         if len(self.phone_number) != 10:
-            frappe.throw("Phone Number must contain exactly 10 digits.")
-
+             frappe.throw("Phone Number must contain exactly 10 digits.")
         exists = frappe.db.exists(
-            "Patient",
-            {
-                "phone_number": self.phone_number,
-                "name": ["!=", self.name]
-            }
-        )
 
+        	"Patient",
+
+        {
+
+            "phone_number": self.phone_number,
+
+            "name": ["!=", self.name]
+
+        }
+
+    )
         if exists:
-            frappe.throw("Phone Number already exists.")
-
+             frappe.throw("Phone Number already exists.")
     def validate_date_of_birth(self):
 
         if not self.date_of_birth:
