@@ -256,3 +256,13 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+home_page = "index"
+
+web_include_css = [
+    "/assets/medci_app/css/global.css",
+    "/assets/medci_app/css/website.css",
+]
+
+web_include_js = [
+    "/assets/medci_app/js/website.js",
+]
