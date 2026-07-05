@@ -39,7 +39,8 @@ function handleLogin(e) {
         method: "login",
         args: { usr: usr, pwd: pwd },
         callback: function(r) {
-            if(r.message === "Logged In") {
+            const loginSucceeded = !r.exc && (r.message === "Logged In" || r.message === "No App");
+            if(loginSucceeded) {
                 frappe.call({
                     method: "medci_app.api.get_login_redirect",
                     callback: function(redir) {
