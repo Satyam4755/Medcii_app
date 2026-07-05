@@ -1,0 +1,138 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<link rel="stylesheet" href="/assets/medci_app/css/style.css">
+{% include "templates/includes/navbar.html" %}
+
+{% set patient = frappe.db.get_value("Patient", {"user": frappe.session.user}, "name") %}
+
+<main class="py-5">
+    <div class="container" style="max-width: 800px;">
+        <div class="text-center mb-5">
+            <h6 class="text-primary fw-bold text-uppercase">Booking</h6>
+            <h2 class="fw-bold">Book an Appointment</h2>
+        </div>
+
+        {% if not patient %}
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            You must be registered as a Patient to book an appointment. 
+            <br>Please <a href="/signup" class="fw-bold text-warning-emphasis">Sign Up</a> or <a href="/login" class="fw-bold text-warning-emphasis">Log In</a>.
+        </div>
+        {% else %}
+        
+        <div class="card p-4 p-md-5 border-0">
+            <form id="bookingForm" onsubmit="handleBooking(event)">
+                <h5 class="fw-bold mb-4 border-bottom pb-3">1. Select Doctor</h5>
+                <div class="mb-5">
+                    {% set doctors = frappe.get_all("Doctor", fields=["name", "first_name", "last_name", "specialization", "consultation_fee"], filters={"availability_status": "Available"}) %}
+                    <select id="doctor" class="form-select form-select-lg" required onchange="fetchSlots()">
+                        <option value="">-- Choose a Doctor --</option>
+                        {% for doc in doctors %}
+                        <option value="{{ doc.name }}" {% if frappe.form_dict.doctor == doc.name %}selected{% endif %}>
+                            Dr. {{ doc.first_name }} {{ doc.last_name or '' }} ({{ doc.specialization }}) - {{ doc.consultation_fee }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <h5 class="fw-bold mb-4 border-bottom pb-3">2. Choose Date & Time</h5>
+                <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Appointment Date</label>
+                        <input type="date" id="date" class="form-control form-control-lg" required onchange="fetchSlots()" min="{{ frappe.utils.today() }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Available Time</label>
+                        <select id="time" class="form-select form-select-lg" required disabled>
+                            <option value="">-- Select Date First --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-4 border-bottom pb-3">3. Details</h5>
+                <div class="mb-4">
+                    <label class="form-label fw-medium">Reason for Visit / Symptoms</label>
+                    <textarea id="reason" class="form-control" rows="3" required placeholder="Briefly describe your symptoms..."></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 rounded-pill mt-3">Request Appointment</button>
+            </form>
+        </div>
+        
+        {% endif %}
+    </div>
+</main>
+
+{% include "templates/includes/footer.html" %}
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    if(document.getElementById("doctor").value && document.getElementById("date").value) {
+        fetchSlots();
+    }
+});
+
+function fetchSlots() {
+    const doctor = document.getElementById("doctor").value;
+    const date = document.getElementById("date").value;
+    const timeSelect = document.getElementById("time");
+    
+    if(!doctor || !date) {
+        timeSelect.innerHTML = '<option value="">-- Select Date First --</option>';
+        timeSelect.disabled = true;
+        return;
+    }
+    
+    timeSelect.innerHTML = '<option value="">Loading slots...</option>';
+    timeSelect.disabled = true;
+    
+    frappe.call({
+        method: "medci_app.api.get_available_slots",
+        args: { doctor: doctor, date: date },
+        callback: function(r) {
+            if(r.message) {
+                timeSelect.innerHTML = '<option value="">-- Choose Time --</option>';
+                if(r.message.length > 0) {
+                    r.message.forEach(t => {
+                        timeSelect.innerHTML += `<option value="${t}">${t.substring(0, 5)}</option>`;
+                    });
+                    timeSelect.disabled = false;
+                } else {
+                    timeSelect.innerHTML = '<option value="">No slots available for this date</option>';
+                }
+            }
+        }
+    });
+}
+
+function handleBooking(e) {
+    e.preventDefault();
+    const btn = document.getElementById("submitBtn");
+    
+    const doctor = document.getElementById("doctor").value;
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    const reason = document.getElementById("reason").value;
+    
+    setBtnLoading(btn, true);
+    
+    frappe.call({
+        method: "medci_app.api.submit_appointment_request",
+        args: { doctor: doctor, date: date, time: time, reason: reason },
+        callback: function(r) {
+            setBtnLoading(btn, false);
+            if(!r.exc) {
+                showToast('success', 'Appointment Request Submitted Successfully!');
+                setTimeout(() => window.location.href = '/patient-dashboard', 2000);
+            } else {
+                showToast('error', r.exc);
+            }
+        },
+        error: function(err) {
+            setBtnLoading(btn, false);
+        }
+    });
+}
+</script>
+{% endblock %}

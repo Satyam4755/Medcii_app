@@ -266,3 +266,24 @@ web_include_css = [
 web_include_js = [
     "/assets/medci_app/js/website.js",
 ]
+
+scheduler_events = {
+    "hourly": [
+        "medci_app.tasks.hourly_cleanup"
+    ],
+    "daily": [
+        "medci_app.tasks.daily_reminders"
+    ]
+}
+
+permission_query_conditions = {
+    "Appointment": "medci_app.permissions.get_permission_query_conditions",
+    "Appointment Request": "medci_app.permissions.get_permission_query_conditions",
+    "Prescription Item": "medci_app.permissions.get_permission_query_conditions"
+}
+
+has_permission = {
+    "Appointment": "medci_app.permissions.has_permission",
+    "Appointment Request": "medci_app.permissions.has_permission",
+    "Prescription Item": "medci_app.permissions.has_permission"
+}

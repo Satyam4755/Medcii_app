@@ -1,0 +1,159 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<link rel="stylesheet" href="/assets/medci_app/css/style.css">
+{% include "templates/includes/navbar.html" %}
+
+{% set doc = frappe.db.get_value("Doctor", {"user": frappe.session.user}, ["name", "first_name", "last_name", "specialization"], as_dict=1) %}
+
+<main class="py-5 bg-light min-vh-100">
+    <div class="container">
+        {% if not doc %}
+        <div class="alert alert-danger text-center">
+            <i class="bi bi-x-circle-fill me-2"></i> Access Denied. You must be a Doctor to view this dashboard.
+        </div>
+        {% else %}
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Doctor Workspace</h3>
+                <p class="text-muted mb-0">Dr. {{ doc.first_name }} {{ doc.last_name or '' }} | {{ doc.specialization }}</p>
+            </div>
+            <div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-medium">
+                    <i class="bi bi-circle-fill small me-1"></i> Status: Available
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Stats -->
+            <div class="col-12">
+                <div class="row g-3">
+                    {% set today = frappe.utils.today() %}
+                    {% set pending_req = frappe.db.count("Appointment Request", {"doctor": doc.name, "status": "Pending"}) %}
+                    {% set todays_apt = frappe.db.count("Appointment", {"doctor": doc.name, "status": "Scheduled", "appointment_date": today}) %}
+                    
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-white shadow-sm p-4 text-center">
+                            <h2 class="display-5 fw-bold text-warning mb-1">{{ pending_req }}</h2>
+                            <p class="text-muted fw-medium mb-0">Pending Requests</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-white shadow-sm p-4 text-center">
+                            <h2 class="display-5 fw-bold text-primary mb-1">{{ todays_apt }}</h2>
+                            <p class="text-muted fw-medium mb-0">Today's Appointments</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-primary text-white shadow-sm p-4 text-center">
+                            <h5 class="fw-bold mb-3">Quick Actions</h5>
+                            <a href="/app/prescription-item" class="btn btn-light btn-sm rounded-pill fw-bold text-primary mb-2 w-100">Write Prescription</a>
+                            <a href="/app/doctor/{{ doc.name }}" class="btn btn-outline-light btn-sm rounded-pill fw-bold w-100">Update Profile</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Left Col: Requests -->
+            <div class="col-md-6">
+                <div class="card border-0 h-100">
+                    <div class="card-header bg-white border-bottom pt-4 pb-3">
+                        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-inbox-fill me-2"></i> Pending Requests</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% set reqs = frappe.get_all("Appointment Request", filters={"doctor": doc.name, "status": "Pending"}, fields=["name", "patient", "appointment_date", "appointment_time", "reason"], order_by="creation asc") %}
+                        
+                        {% if reqs %}
+                            <div class="list-group list-group-flush">
+                            {% for r in reqs %}
+                                {% set p_name = frappe.db.get_value("Patient", r.patient, "first_name") %}
+                                <div class="list-group-item p-4" id="req-{{ r.name }}">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0 text-dark">{{ p_name }}</h6>
+                                        <span class="badge bg-light text-dark">{{ frappe.utils.formatdate(r.appointment_date) }} {{ r.appointment_time[:5] }}</span>
+                                    </div>
+                                    <p class="text-muted small mb-3 fst-italic">"{{ r.reason }}"</p>
+                                    <div class="d-flex gap-2">
+                                        <button onclick="processReq('{{ r.name }}', 'Accept')" class="btn btn-success btn-sm rounded-pill px-3 flex-grow-1"><i class="bi bi-check-lg me-1"></i> Accept</button>
+                                        <button onclick="processReq('{{ r.name }}', 'Reject')" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="bi bi-x-lg"></i></button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="p-5 text-center text-muted">
+                                <i class="bi bi-check-circle display-4 mb-3 text-success-emphasis"></i>
+                                <p>All caught up! No pending requests.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Col: Today's Schedule -->
+            <div class="col-md-6">
+                <div class="card border-0 h-100">
+                    <div class="card-header bg-white border-bottom pt-4 pb-3">
+                        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-calendar2-day-fill me-2"></i> Today's Schedule</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% set apts = frappe.get_all("Appointment", filters={"doctor": doc.name, "appointment_date": today, "status": "Scheduled"}, fields=["name", "patient", "appointment_time"], order_by="appointment_time asc") %}
+                        
+                        {% if apts %}
+                            <div class="list-group list-group-flush">
+                            {% for a in apts %}
+                                {% set p_name = frappe.db.get_value("Patient", a.patient, "first_name") %}
+                                <div class="list-group-item p-4 d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-primary-subtle text-primary rounded-3 px-3 py-2 fw-bold">
+                                            {{ a.appointment_time[:5] }}
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">{{ p_name }}</h6>
+                                            <span class="text-muted small">ID: {{ a.name }}</span>
+                                        </div>
+                                    </div>
+                                    <a href="/app/appointment/{{ a.name }}" class="btn btn-light btn-sm text-primary rounded-pill px-3">View</a>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="p-5 text-center text-muted">
+                                <i class="bi bi-cup-hot display-4 mb-3 text-secondary"></i>
+                                <p>You have no appointments scheduled for today.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        {% endif %}
+    </div>
+</main>
+
+{% include "templates/includes/footer.html" %}
+
+<script>
+function processReq(id, action) {
+    frappe.call({
+        method: "medci_app.api.process_appointment_request",
+        args: { request_id: id, action: action },
+        callback: function(r) {
+            if(!r.exc) {
+                showToast('success', 'Request ' + action + 'ed Successfully!');
+                document.getElementById('req-' + id).style.display = 'none';
+                if(action === 'Accept') {
+                    setTimeout(() => location.reload(), 1500); // Reload to update numbers and schedule
+                }
+            } else {
+                showToast('error', r.exc);
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

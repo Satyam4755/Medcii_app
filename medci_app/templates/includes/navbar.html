@@ -1,9 +1,46 @@
-<nav style="padding:15px;background:#1976d2;">
-    <a href="/" style="color:white;margin-right:20px;">Home</a>
-    <a href="/doctors" style="color:white;margin-right:20px;">Doctors</a>
-    <a href="/appointments" style="color:white;margin-right:20px;">Appointments</a>
-    <a href="/prescriptions" style="color:white;margin-right:20px;">Prescriptions</a>
-    <a href="/contact" style="color:white;margin-right:20px;">Contact</a>
-    <a href="/login" style="color:white;float:right;margin-left:20px;">Login</a>
-    <a href="/signup" style="color:white;float:right;">Sign Up</a>
+<nav class="navbar navbar-expand-lg glass-nav sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="/">
+            <i class="bi bi-heart-pulse-fill me-2"></i>Medcii
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/doctors">Doctors</a></li>
+                <li class="nav-item"><a class="nav-link" href="/appointments">Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="/prescriptions">Prescriptions</a></li>
+                {% if frappe.session.user == "Guest" %}
+                <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                {% endif %}
+            </ul>
+            <div class="d-flex align-items-center gap-2">
+                {% if frappe.session.user == "Guest" %}
+                    <a href="/login" class="btn btn-outline-primary">Login</a>
+                    <a href="/signup" class="btn btn-primary">Sign Up</a>
+                {% else %}
+                    {% set role_prof = frappe.db.get_value("User", frappe.session.user, "role_profile_name") %}
+                    {% if frappe.session.user == "Administrator" %}
+                        {% set dash_link = "/app" %}
+                    {% elif role_prof == "Doctor" or frappe.db.exists("Doctor", {"user": frappe.session.user}) %}
+                        {% set dash_link = "/doctor-dashboard" %}
+                    {% else %}
+                        {% set dash_link = "/patient-dashboard" %}
+                    {% endif %}
+                    
+                    <a href="{{ dash_link }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-grid-fill me-1"></i> Dashboard
+                    </a>
+                    <a href="/me" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-person-fill"></i> Profile
+                    </a>
+                    <a href="/?cmd=web_logout" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </nav>

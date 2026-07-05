@@ -1,14 +1,83 @@
-{% include "templates/includes/navbar.html" %}
-<link rel="stylesheet" href="/assets/medci_app/css/style.css">
-<div style="padding:60px;text-align:center;">
-    <h1>Sign Up</h1>
+{% extends "templates/web.html" %}
 
-    <form style="width:300px;margin:auto;">
-        <input type="text" placeholder="Full Name" style="width:100%;padding:10px;margin:10px 0;">
-        <input type="email" placeholder="Email" style="width:100%;padding:10px;margin:10px 0;">
-        <input type="password" placeholder="Password" style="width:100%;padding:10px;margin:10px 0;">
-        <button type="submit">Create Account</button>
-    </form>
+{% block page_content %}
+<div class="auth-wrapper py-5">
+    <div class="card auth-card text-center" style="max-width: 500px;">
+        <h2 class="fw-bold mb-1 text-primary"><i class="bi bi-heart-pulse-fill me-2"></i>Sign Up</h2>
+        <p class="text-muted mb-4">Create your Medcii account</p>
+        
+        <form id="signupForm" onsubmit="handleSignup(event)">
+            <div class="mb-3 text-start">
+                <label class="form-label fw-medium">I am a</label>
+                <select class="form-select form-select-lg" id="role" required>
+                    <option value="Patient">Patient</option>
+                    <option value="Doctor">Doctor</option>
+                </select>
+            </div>
+            <div class="mb-3 text-start">
+                <label class="form-label fw-medium">Full Name</label>
+                <input type="text" id="full_name" class="form-control form-control-lg" required>
+            </div>
+            <div class="mb-3 text-start">
+                <label class="form-label fw-medium">Email address</label>
+                <input type="email" id="email" class="form-control form-control-lg" required>
+            </div>
+            <div class="mb-4 text-start">
+                <label class="form-label fw-medium">Password</label>
+                <input type="password" id="password" class="form-control form-control-lg" required minlength="6">
+            </div>
+            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100">Create Account</button>
+        </form>
+        
+        <div class="mt-4 text-muted">
+            Already have an account? <a href="/login" class="text-decoration-none fw-bold">Log In</a>
+        </div>
+    </div>
 </div>
 
-{% include "templates/includes/footer.html" %}
+<script>
+function handleSignup(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    
+    const role = document.getElementById('role').value;
+    const full_name = document.getElementById('full_name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    setBtnLoading(btn, true);
+    
+    frappe.call({
+        method: "medci_app.api.register_user",
+        args: {
+            full_name: full_name,
+            email: email,
+            password: password,
+            role: role
+        },
+        callback: function(r) {
+            setBtnLoading(btn, false);
+            if(!r.exc) {
+                showToast('success', 'Account created! Redirecting...');
+                
+                // Login immediately
+                frappe.call({
+                    method: "login",
+                    args: { usr: email, pwd: password },
+                    callback: function(lr) {
+                        if(lr.message) {
+                            window.location.href = role === 'Doctor' ? '/doctor-dashboard' : '/patient-dashboard';
+                        }
+                    }
+                });
+            } else {
+                showToast('error', r.exc);
+            }
+        },
+        error: function(err) {
+            setBtnLoading(btn, false);
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,13 +1,63 @@
-{% include "templates/includes/navbar.html" %}
-<link rel="stylesheet" href="/assets/medci_app/css/style.css">
-<div style="padding:60px;text-align:center;">
-    <h1>Login</h1>
+{% extends "templates/web.html" %}
 
-    <form style="width:300px;margin:auto;">
-        <input type="email" placeholder="Email" style="width:100%;padding:10px;margin:10px 0;">
-        <input type="password" placeholder="Password" style="width:100%;padding:10px;margin:10px 0;">
-        <button type="submit">Login</button>
-    </form>
+{% block page_content %}
+<div class="auth-wrapper py-5">
+    <div class="card auth-card text-center mx-auto" style="max-width: 450px;">
+        <h2 class="fw-bold mb-1 text-primary"><i class="bi bi-heart-pulse-fill me-2"></i>Login</h2>
+        <p class="text-muted mb-4">Welcome back to Medcii</p>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="mb-3 text-start">
+                <label class="form-label fw-medium">Email address / Username</label>
+                <input type="text" id="usr" name="usr" class="form-control form-control-lg" required>
+            </div>
+            <div class="mb-4 text-start">
+                <div class="d-flex justify-content-between">
+                    <label class="form-label fw-medium">Password</label>
+                </div>
+                <input type="password" id="pwd" name="pwd" class="form-control form-control-lg" required>
+            </div>
+            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100">Sign In</button>
+        </form>
+        
+        <div class="mt-4 text-muted">
+            Don't have an account? <a href="/signup" class="text-decoration-none fw-bold">Sign Up</a>
+        </div>
+    </div>
 </div>
 
-{% include "templates/includes/footer.html" %}
+<script>
+function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const usr = document.getElementById('usr').value;
+    const pwd = document.getElementById('pwd').value;
+    
+    setBtnLoading(btn, true);
+    
+    frappe.call({
+        method: "login",
+        args: { usr: usr, pwd: pwd },
+        callback: function(r) {
+            if(r.message === "Logged In") {
+                frappe.call({
+                    method: "medci_app.api.get_login_redirect",
+                    callback: function(redir) {
+                        setBtnLoading(btn, false);
+                        showToast('success', 'Logged in successfully!');
+                        setTimeout(() => window.location.href = redir.message || '/', 500);
+                    }
+                });
+            } else {
+                setBtnLoading(btn, false);
+                showToast('error', 'Login failed');
+            }
+        },
+        error: function(err) {
+            setBtnLoading(btn, false);
+            // Error is handled by frappe
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,75 +1,100 @@
+{% extends "templates/web.html" %}
 
+{% block page_content %}
 <link rel="stylesheet" href="/assets/medci_app/css/style.css">
 
 {% include "templates/includes/navbar.html" %}
 
-<section class="hero">
-    <div class="container">
-        <h1>Medcii</h1>
-        <h3>Healthcare Management System</h3>
-
-        <p>
-            Manage Doctors, Patients, Appointments and Prescriptions
-            from one platform.
-        </p>
-
-        <button>Book Appointment</button>
-        <button>Learn More</button>
-    </div>
-</section>
-
-<section class="container">
-
-    <h2>Our Services</h2>
-
-    <div class="cards">
-
-        <div class="card">
-            <h3>Doctors</h3>
-            <p>Manage doctor profiles and schedules.</p>
+<main>
+    <!-- Hero Section -->
+    <section class="hero-section text-center position-relative overflow-hidden">
+        <div class="container position-relative z-1">
+            <span class="badge bg-primary-subtle text-primary mb-3 py-2 px-3 rounded-pill fw-bold">#1 Healthcare Platform</span>
+            <h1 class="display-3 fw-bold mb-4">World-Class Care, <br><span class="text-primary">Right at Your Fingertips</span></h1>
+            <p class="lead text-muted mb-5 mx-auto" style="max-width: 600px;">
+                Experience the future of healthcare with Medcii. Seamlessly manage appointments, consult top doctors, and access your digital prescriptions securely.
+            </p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="/appointments" class="btn btn-primary btn-lg px-4 rounded-pill">Book Appointment</a>
+                <a href="/doctors" class="btn btn-outline-secondary btn-lg px-4 rounded-pill bg-white">Find a Doctor</a>
+            </div>
         </div>
+    </section>
 
-        <div class="card">
-            <h3>Patients</h3>
-            <p>Maintain patient medical records.</p>
+    <!-- Services Section -->
+    <section class="py-5 my-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h6 class="text-primary fw-bold text-uppercase tracking-wider">Our Services</h6>
+                <h2 class="fw-bold">Comprehensive Medical Care</h2>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card card-hover h-100 p-4 border-0">
+                        <div class="bg-primary-subtle text-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                        <h5 class="fw-bold">Expert Doctors</h5>
+                        <p class="text-muted small mb-0">Consult with top-tier specialists from renowned hospitals across various medical fields.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-hover h-100 p-4 border-0">
+                        <div class="bg-primary-subtle text-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
+                            <i class="bi bi-file-medical-fill"></i>
+                        </div>
+                        <h5 class="fw-bold">Patient Profiles</h5>
+                        <p class="text-muted small mb-0">Maintain your digital health records securely and share them instantly with doctors.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-hover h-100 p-4 border-0">
+                        <div class="bg-primary-subtle text-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
+                            <i class="bi bi-calendar2-check-fill"></i>
+                        </div>
+                        <h5 class="fw-bold">Easy Appointments</h5>
+                        <p class="text-muted small mb-0">Book, reschedule, or cancel appointments in seconds without waiting on hold.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-hover h-100 p-4 border-0">
+                        <div class="bg-primary-subtle text-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
+                            <i class="bi bi-capsule"></i>
+                        </div>
+                        <h5 class="fw-bold">Digital Prescriptions</h5>
+                        <p class="text-muted small mb-0">Access your prescriptions anytime, anywhere securely on your device.</p>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div class="card">
-            <h3>Appointments</h3>
-            <p>Book and track appointments.</p>
+    <!-- Stats Section -->
+    <section class="bg-primary text-white py-5">
+        <div class="container py-4">
+            <div class="row text-center g-4">
+                <div class="col-6 col-md-3">
+                    <h2 class="display-4 fw-bold mb-1">1000+</h2>
+                    <div class="text-white-50">Happy Patients</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h2 class="display-4 fw-bold mb-1">150+</h2>
+                    <div class="text-white-50">Expert Doctors</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h2 class="display-4 fw-bold mb-1">5000+</h2>
+                    <div class="text-white-50">Appointments</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h2 class="display-4 fw-bold mb-1">99%</h2>
+                    <div class="text-white-50">Satisfaction</div>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div class="card">
-            <h3>Prescriptions</h3>
-            <p>Generate digital prescriptions.</p>
-        </div>
-
-    </div>
-
-</section>
-
-<section class="stats">
-
-    <div class="stat">
-        <h2>120+</h2>
-        <p>Doctors</p>
-    </div>
-
-    <div class="stat">
-        <h2>4500+</h2>
-        <p>Patients</p>
-    </div>
-
-    <div class="stat">
-        <h2>9000+</h2>
-        <p>Appointments</p>
-    </div>
-
-    <div class="stat">
-        <h2>15000+</h2>
-        <p>Prescriptions</p>
-    </div>
-
-</section>
+</main>
 
 {% include "templates/includes/footer.html" %}
+{% endblock %}

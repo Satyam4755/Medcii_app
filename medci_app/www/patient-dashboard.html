@@ -1,0 +1,140 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<link rel="stylesheet" href="/assets/medci_app/css/style.css">
+{% include "templates/includes/navbar.html" %}
+
+{% set patient = frappe.db.get_value("Patient", {"user": frappe.session.user}, ["name", "first_name", "last_name", "blood_group"], as_dict=1) %}
+
+<main class="py-5 bg-light min-vh-100">
+    <div class="container">
+        {% if not patient %}
+        <div class="alert alert-danger text-center">
+            <i class="bi bi-x-circle-fill me-2"></i> Access Denied. You must be a Patient to view this dashboard.
+        </div>
+        {% else %}
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Welcome, {{ patient.first_name }}</h3>
+                <p class="text-muted mb-0">Patient ID: {{ patient.name }} | Blood Group: {{ patient.blood_group or 'N/A' }}</p>
+            </div>
+            <div>
+                <a href="/book-appointment" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-calendar-plus me-2"></i> Book Appointment
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-8">
+                <!-- Pending Requests -->
+                <div class="card border-0 mb-4">
+                    <div class="card-header bg-white border-0 pt-4 pb-0">
+                        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-hourglass-split me-2"></i> Pending Requests</h5>
+                    </div>
+                    <div class="card-body">
+                        {% set reqs = frappe.get_all("Appointment Request", filters={"patient": patient.name, "status": "Pending"}, fields=["name", "doctor", "appointment_date", "appointment_time", "reason"], order_by="appointment_date asc") %}
+                        {% if reqs %}
+                            <div class="list-group list-group-flush">
+                            {% for r in reqs %}
+                                {% set d_name = frappe.db.get_value("Doctor", r.doctor, "first_name") %}
+                                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Dr. {{ d_name }}</h6>
+                                        <div class="text-muted small">
+                                            <i class="bi bi-calendar-event me-1"></i> {{ frappe.utils.formatdate(r.appointment_date) }} at {{ r.appointment_time[:5] }}
+                                            <br>
+                                            <span class="fst-italic text-secondary">Reason: {{ r.reason }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">No pending appointment requests.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Upcoming Appointments -->
+                <div class="card border-0">
+                    <div class="card-header bg-white border-0 pt-4 pb-0">
+                        <h5 class="fw-bold text-primary mb-0"><i class="bi bi-calendar-check-fill me-2"></i> Upcoming Appointments</h5>
+                    </div>
+                    <div class="card-body">
+                        {% set apts = frappe.get_all("Appointment", filters={"patient": patient.name, "status": "Scheduled", "appointment_date": [">=", frappe.utils.today()]}, fields=["name", "doctor", "appointment_date", "appointment_time"], order_by="appointment_date asc") %}
+                        {% if apts %}
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Doctor</th>
+                                            <th>Date & Time</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for a in apts %}
+                                        {% set d_name = frappe.db.get_value("Doctor", a.doctor, "first_name") %}
+                                        <tr>
+                                            <td class="fw-medium">Dr. {{ d_name }}</td>
+                                            <td>{{ frappe.utils.formatdate(a.appointment_date) }}, {{ a.appointment_time[:5] }}</td>
+                                            <td><span class="badge bg-success rounded-pill">Scheduled</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-3">You don't have any upcoming appointments.</p>
+                                <a href="/book-appointment" class="btn btn-outline-primary btn-sm rounded-pill px-3">Book Now</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Notifications / Actions -->
+                <div class="card border-0 bg-primary text-white mb-4">
+                    <div class="card-body p-4 text-center">
+                        <i class="bi bi-shield-check display-4 mb-3"></i>
+                        <h5 class="fw-bold">Your Health is Secure</h5>
+                        <p class="small text-white-50 mb-0">All your medical records are encrypted and stored safely.</p>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="card border-0">
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush rounded-3">
+                            <a href="/appointments" class="list-group-item list-group-item-action py-3 d-flex align-items-center">
+                                <i class="bi bi-clock-history text-primary me-3 fs-5"></i>
+                                <span class="fw-medium">Appointment History</span>
+                                <i class="bi bi-chevron-right ms-auto text-muted small"></i>
+                            </a>
+                            <a href="/prescriptions" class="list-group-item list-group-item-action py-3 d-flex align-items-center">
+                                <i class="bi bi-capsule text-primary me-3 fs-5"></i>
+                                <span class="fw-medium">My Prescriptions</span>
+                                <i class="bi bi-chevron-right ms-auto text-muted small"></i>
+                            </a>
+                            <a href="/me" class="list-group-item list-group-item-action py-3 d-flex align-items-center">
+                                <i class="bi bi-person-circle text-primary me-3 fs-5"></i>
+                                <span class="fw-medium">Edit Profile</span>
+                                <i class="bi bi-chevron-right ms-auto text-muted small"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% endif %}
+    </div>
+</main>
+
+{% include "templates/includes/footer.html" %}
+{% endblock %}

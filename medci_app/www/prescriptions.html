@@ -1,21 +1,104 @@
-{% include "templates/includes/navbar.html" %}
+{% extends "templates/web.html" %}
+
+{% block page_content %}
 <link rel="stylesheet" href="/assets/medci_app/css/style.css">
-<div style="padding:60px;">
-    <h1>Prescriptions</h1>
+{% include "templates/includes/navbar.html" %}
 
-    <table border="1" cellpadding="10">
-        <tr>
-            <th>Patient</th>
-            <th>Doctor</th>
-            <th>Medicine</th>
-        </tr>
+{% set patient = frappe.db.get_value("Patient", {"user": frappe.session.user}, "name") %}
 
-        <tr>
-            <td>John</td>
-            <td>Dr. Rahul</td>
-            <td>Paracetamol 500mg</td>
-        </tr>
-    </table>
-</div>
+<main class="py-5 bg-light min-vh-100">
+    <div class="container" style="max-width: 900px;">
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1">My Prescriptions</h3>
+            <p class="text-muted">View all your digital prescriptions in one place.</p>
+        </div>
+        
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                {% if not patient %}
+                    <div class="p-5 text-center text-muted">
+                        <p>Please log in as a Patient to view prescriptions.</p>
+                    </div>
+                {% else %}
+                    <!-- We query Appointment since Prescription Items are a child table of Appointment -->
+                    {% set apts = frappe.get_all("Appointment", filters={"patient": patient, "status": ["in", ["Completed", "Ongoing", "Scheduled"]]}, fields=["name", "doctor", "appointment_date", "diagnosis", "notes"], order_by="appointment_date desc") %}
+                    
+                    {% set has_prescriptions = false %}
+                    <div class="accordion accordion-flush" id="prescriptionsAccordion">
+                        {% for a in apts %}
+                            {% set meds = frappe.get_all("Prescription Item", filters={"parent": a.name}, fields=["medicine", "dosage", "duration", "frequency", "instructions"]) %}
+                            {% if meds %}
+                                {% set has_prescriptions = true %}
+                                {% set d_name = frappe.db.get_value("Doctor", a.doctor, "first_name") %}
+                                <div class="accordion-item border-bottom">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed py-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ a.name }}">
+                                            <div class="d-flex align-items-center gap-3 w-100">
+                                                <div class="bg-primary-subtle text-primary rounded-3 px-3 py-2 fw-bold">
+                                                    {{ frappe.utils.formatdate(a.appointment_date) }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-0">Dr. {{ d_name }}</h6>
+                                                    <span class="text-muted small text-truncate d-block" style="max-width: 300px;">{{ a.diagnosis or 'Routine Checkup' }}</span>
+                                                </div>
+                                                <span class="badge bg-light text-dark ms-auto me-3">{{ meds|length }} Items</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-{{ a.name }}" class="accordion-collapse collapse" data-bs-parent="#prescriptionsAccordion">
+                                        <div class="accordion-body bg-light p-4">
+                                            {% if a.notes %}
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold text-dark mb-2">Doctor's Notes</h6>
+                                                    <p class="text-muted small mb-0">{{ a.notes }}</p>
+                                                </div>
+                                            {% endif %}
+                                            <h6 class="fw-bold text-dark mb-3">Medicines</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-bordered bg-white mb-0">
+                                                    <thead class="table-light text-muted small">
+                                                        <tr>
+                                                            <th>Medicine</th>
+                                                            <th>Dosage</th>
+                                                            <th>Frequency</th>
+                                                            <th>Duration</th>
+                                                            <th>Instructions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="small align-middle">
+                                                    {% for m in meds %}
+                                                        <tr>
+                                                            <td class="fw-medium text-dark">{{ m.medicine }}</td>
+                                                            <td>{{ m.dosage or '-' }}</td>
+                                                            <td>{{ m.frequency or '-' }}</td>
+                                                            <td>{{ m.duration or '-' }}</td>
+                                                            <td class="text-muted">{{ m.instructions or '-' }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="text-end mt-3">
+                                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    {% if not has_prescriptions %}
+                        <div class="p-5 text-center text-muted">
+                            <i class="bi bi-capsule display-4 mb-3 text-secondary"></i>
+                            <p>You have no prescriptions yet.</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
 
 {% include "templates/includes/footer.html" %}
+{% endblock %}
